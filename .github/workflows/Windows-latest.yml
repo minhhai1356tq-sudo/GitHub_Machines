@@ -1,22 +1,19 @@
-name: Windows RDP High Performance
+name: Windows RDP via Pinggy
 on: [push, workflow_dispatch]
 
 jobs:
   build:
     runs-on: windows-2025
-    timeout-minutes: 360 # Tối đa 6 giờ
+    timeout-minutes: 360
 
     steps:
-    - name: Kích hoạt RDP & Tối ưu hệ thống
+    - name: Kích hoạt RDP
       run: |
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "ColorDepth" -Value 4
-        
+
     - name: Đặt mật khẩu người dùng
       run: Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
-      
-    - name: Tải xuống và kết nối Cloudflared
-      run: |
-        Invoke-WebRequest https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -OutFile cloudflared.exe
-        .\cloudflared.exe tunnel --url tcp://localhost:3389
+
+    - name: Tạo đường hầm Pinggy
+      run: ssh -p 443 -R 0:localhost:3389 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 a.pinggy.io
