@@ -1,4 +1,4 @@
-name: Windows RDP via Pinggy
+name: Windows RDP via Ngrok
 on: [push, workflow_dispatch]
 
 jobs:
@@ -7,6 +7,17 @@ jobs:
     timeout-minutes: 360
 
     steps:
+    - name: Tải xuống Ngrok
+      run: Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
+
+    - name: Giải nén Ngrok
+      run: Expand-Archive ngrok.zip
+
+    - name: Xác thực Ngrok
+      run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
+      env:
+        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+
     - name: Kích hoạt RDP
       run: |
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
@@ -15,5 +26,10 @@ jobs:
     - name: Đặt mật khẩu người dùng
       run: Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
 
-    - name: Tạo đường hầm Pinggy
-      run: ssh -p 443 -R 0:localhost:3389 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 a.pinggy.io
+    - name: Cài đặt Myrtille WebRDP
+      run: |
+        Invoke-WebRequest https://github.com/cedrox/myrtille/releases/download/v2.9.0/Myrtille.Services.Installer.exe -OutFile myrtille.exe
+        Start-Process -FilePath .\myrtille.exe -ArgumentList '/SILENT' -Wait
+
+    - name: Tạo đường hầm Ngrok HTTP
+      run: .\ngrok\ngrok.exe http 8080
