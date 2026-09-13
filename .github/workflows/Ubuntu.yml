@@ -1,9 +1,0 @@
-name: Ubuntu
-on: workflow_dispatch
-jobs:
-  system:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup SSH Terminal
-        uses: mxschmitt/action-tmate@v3
