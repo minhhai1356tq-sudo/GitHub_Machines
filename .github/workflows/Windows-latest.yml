@@ -1,25 +1,22 @@
-name: Windows RDP via Ngrok
+name: Windows RDP High Performance
 on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2025
     timeout-minutes: 360 # Tối đa 6 giờ
 
     steps:
-    - name: Tải xuống Ngrok
-      run: Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
-    - name: Giải nén Ngrok
-      run: Expand-Archive ngrok.zip
-    - name: Xác thực Ngrok
-      run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
-      env:
-        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
-    - name: Kích hoạt RDP
+    - name: Kích hoạt RDP & Tối ưu hệ thống
       run: |
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "ColorDepth" -Value 4
+        
     - name: Đặt mật khẩu người dùng
       run: Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
-    - name: Tạo đường hầm Ngrok
-      run: .\ngrok\ngrok.exe tcp 3389
+      
+    - name: Tải xuống và kết nối Cloudflared
+      run: |
+        Invoke-WebRequest https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -OutFile cloudflared.exe
+        .\cloudflared.exe tunnel --url tcp://localhost:3389
