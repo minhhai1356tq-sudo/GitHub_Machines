@@ -18,8 +18,26 @@ jobs:
         & "C:\Program Files\Tailscale\tailscale-ipn.exe" --noninteractive
         & "C:\Program Files\Tailscale\tailscale.exe" up --authkey=${{ secrets.TAILSCALE_AUTHKEY }}
 
-    - name: Enable Remote Desktop & Keep Alive
+    - name: Enable Remote Desktop & Set Password
       run: |
+        # Cho phép kết nối RDP và bật Firewall
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        
+        # Đặt mật khẩu cho user runneradmin (Bạn có thể đổi P@ssword123456 thành mật khẩu tùy ý)
+        net user runneradmin "P@ssword123456"
+
+    - name: Display Connection Info & Keep Alive
+      run: |
+        # Lấy IP Tailscale của máy ảo
+        $tsIP = & "C:\Program Files\Tailscale\tailscale.exe" ip -4
+        
+        Write-Host "=================================================="
+        Write-Host "THÔNG TIN KẾT NỐI RDP:"
+        Write-Host "IP Tailscale : $tsIP"
+        Write-Host "Port         : 3389 (Cổng RDP mặc định)"
+        Write-Host "Username     : runneradmin"
+        Write-Host "Password     : P@ssword123456"
+        Write-Host "=================================================="
+        
         Start-Sleep -Seconds 7200
